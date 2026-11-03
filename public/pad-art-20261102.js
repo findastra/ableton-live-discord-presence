@@ -1,5 +1,5 @@
-// The Ableton Live Discord Presence artwork: an 8×8 grid of neon pads on graphite that cycles through ten designs,
-// each with its own colours, fading from one to the next, while shooting stars streak across.
+// The Ableton Live Discord Presence artwork: an 8×8 grid of neon pads on black that cycles through ten designs,
+// each with its own colours, fading from one to the next.
 // One drawing for all three pictures, so they always match: the moving pads on the app's page, the card GIF Discord
 // shows, and the still app icon (the GIF's first frame).
 // Works in the browser (the page) and in Node (scripts/make-pad-art-20261102.js).
@@ -8,7 +8,7 @@ export const GRID = 8;
 // Time is counted in sixteenth notes at 125 BPM (120 ms each). Each design plays for two bars.
 export const SCENE_STEPS = 32;
 const FADE_STEPS = 4;
-const BG = [0, 0, 0], OFF = [34, 37, 44], STAR = [235, 242, 255];
+const BG = [0, 0, 0], OFF = [34, 37, 44];
 
 // Three colours each, laid along the grid's diagonal from the top left to the bottom right.
 const PALETTES = {
@@ -147,25 +147,6 @@ export function padState(t) {
 }
 export const lights = t => padState(t).bright;
 
-// Shooting stars: one starts every six steps from the top or left edge, crosses in five steps and leaves a tail.
-const STAR_EVERY = 6, STAR_STEPS = 5;
-function stars(t, size) {
-  const list = [];
-  for (const k of [Math.floor((t + 3) / STAR_EVERY), Math.floor((t + 3) / STAR_EVERY) - 1]) {
-    const p = (t + 3 - k * STAR_EVERY) / STAR_STEPS;
-    if (p < 0 || p > 1.3) continue;
-    const angle = (0.45 + rand(k * 3 + 1) * 0.35) * Math.PI / 2;
-    const dx = Math.cos(angle), dy = Math.sin(angle);
-    const fromTop = rand(k * 5 + 2) < 0.6;
-    const x0 = fromTop ? (rand(k * 7 + 3) * 0.7 - 0.1) * size : -0.08 * size;
-    const y0 = fromTop ? -0.08 * size : rand(k * 7 + 3) * 0.6 * size;
-    const travel = 1.5 * size;
-    list.push({ x: x0 + dx * travel * p, y: y0 + dy * travel * p, dx, dy, tail: 0.32 * size,
-      width: Math.max(1, size / 170), fade: p > 1 ? 1 - (p - 1) / 0.3 : 1 });
-  }
-  return list;
-}
-
 // Distance from a point to a rounded square centred on 0,0 (negative inside).
 function boxDistance(px, py, half, radius) {
   const qx = Math.abs(px) - half + radius, qy = Math.abs(py) - half + radius;
@@ -178,7 +159,6 @@ export function drawPads(out, size, t) {
   const unit = size / 1024;
   const margin = 40 * unit, cell = (size - margin * 2) / GRID, half = 50 * unit, radius = 7 * unit;
   const glowFall = 9 * unit, rim = 5 * unit;
-  const shooting = stars(t, size);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       let r0 = BG[0], g0 = BG[1], b0 = BG[2];
@@ -213,18 +193,6 @@ export function drawPads(out, size, t) {
           }
           r0 += (fr - r0) * edge; g0 += (fg - g0) * edge; b0 += (fb - b0) * edge;
         }
-      }
-      // Shooting stars on top: a bright head and a fading tail.
-      for (const star of shooting) {
-        const px = fx - star.x, py = fy - star.y;
-        const along = -(px * star.dx + py * star.dy);
-        if (along < -star.width * 6 || along > star.tail) continue;
-        const across = Math.abs(px * star.dy - py * star.dx);
-        if (across > star.width * 8) continue;
-        const tail = along > 0 ? (1 - along / star.tail) ** 2 * Math.exp(-((across / star.width) ** 2)) : 0;
-        const head = Math.exp(-((Math.hypot(px, py) / (star.width * 2.2)) ** 2)) * 1.4;
-        const k = Math.max(tail, head) * star.fade;
-        r0 += STAR[0] * k; g0 += STAR[1] * k; b0 += STAR[2] * k;
       }
       const o = (y * size + x) * 4;
       out[o] = r0 > 255 ? 255 : r0; out[o + 1] = g0 > 255 ? 255 : g0; out[o + 2] = b0 > 255 ? 255 : b0; out[o + 3] = 255;

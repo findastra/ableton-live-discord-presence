@@ -57,6 +57,14 @@ Discord. Settings stay in `.local/config.json` in the app folder.
 - "Playing drums" means your drum gear is plugged in while Ableton is open, not that you are hitting pads that very
   second. Reading pad hits would mean opening the APC64, which Windows usually lets only one program do.
 
+## Coming next
+
+For now the card says **Playing drums** (or **Making music**) and **Jamming** when the set has no name. Planned:
+
+- **Say exactly what you're playing**, for example "Playing APC64", from the device name the app already finds.
+- **Any gear and software**: DJs and music producers add their own controllers, drum kits, decks and programs
+  (other music and DJ software too), and the card names what they're using.
+
 ## License
 
 [MIT](LICENSE).
