@@ -20,7 +20,7 @@ First version of Ableton Live Discord Presence: a Discord card while Astra plays
   is not on yet: writing the Startup file from Claude was refused, so Astra ticks it on the app's page.
 
 ## Open
-- Astra makes the Discord application (a non-brand name such as "Drum Session") and gives its Application ID. Then
-  set `BUILT_IN_CLIENT_ID` in `src/card-20261102.js`, bump the version and check the card appears.
+- Done 2026-11-02: Astra made "Ableton Live Presence" (1567036812768186491); built in as `BUILT_IN_CLIENT_ID`,
+  version 0.2.0, Discord accepted the card. Icon, description and tags set in the portal.
 - Drum Dog's page link and Discord Damsel's card: not done here. Someone was working in drum-dog on 2026-11-02, so
   check ownership first.

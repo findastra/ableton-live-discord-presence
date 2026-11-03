@@ -1,10 +1,10 @@
 {
   "name": "ableton-live-discord-presence",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Shows on your Discord profile when you're playing drums or making music in Ableton Live.",
   "type": "module",
   "engines": { "node": ">=24.0.0" },
-  "scripts": { "start": "node src/server-20261102.js", "test": "node --test", "art": "node scripts/make-pad-grid-20261102.js" },
+  "scripts": { "start": "node src/server-20261102.js", "test": "node --test", "art": "node scripts/make-pad-art-20261102.js" },
   "license": "MIT"
 }
