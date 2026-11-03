@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ableton Live Discord Presence</title>
+<link rel="stylesheet" href="/style-20261102.css">
+<script type="module" src="/app-20261102.js"></script>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Ableton Live Discord Presence</h1>
+    <p id="message" role="status">Loading…</p>
+  </header>
+
+  <section class="preview" aria-label="Card preview">
+    <img src="/pad-grid-card-20261102.gif" alt="Neon pad grid playing a drum pattern" width="96" height="96">
+    <div>
+      <p class="title" id="card-name">Ableton Live</p>
+      <p id="card-details">Making music</p>
+      <p id="card-state">Jamming</p>
+      <p class="muted" id="card-live">Waiting for Ableton Live</p>
+    </div>
+  </section>
+
+  <section class="controls" aria-label="Sharing">
+    <button type="button" data-mode="auto">Automatic</button>
+    <button type="button" data-mode="off">Off</button>
+  </section>
+
+  <form id="settings">
+    <label>Discord Application ID
+      <input name="clientId" inputmode="numeric" autocomplete="off" placeholder="17–20 digits">
+    </label>
+    <label class="check"><input type="checkbox" name="showSetName"> Show the song’s name (never “Untitled”)</label>
+    <label>Drum gear (Windows device names, comma separated)
+      <input name="drumDevices" autocomplete="off" placeholder="APC64">
+    </label>
+    <label class="check"><input type="checkbox" id="startup"> Start quietly when Windows starts</label>
+    <div class="row">
+      <button type="submit">Save</button>
+      <button type="button" id="quit" class="ghost">Quit app</button>
+    </div>
+  </form>
+  <p class="muted small">Reads only Ableton’s window title and your device names. Never audio, notes or files.</p>
+</main>
+</body>
+</html>
