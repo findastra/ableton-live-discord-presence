@@ -1,15 +1,35 @@
-// The Ableton Live Discord Presence artwork: an 8×8 grid of neon pads on graphite, playing a two-bar drum pattern
-// while a soft wave of light crosses it. One drawing for all three pictures, so they always match:
-// the moving pads on the app's page, the card GIF Discord shows, and the still app icon (the GIF's first frame).
+// The Ableton Live Discord Presence artwork: an 8×8 grid of neon pads on graphite that cycles through ten designs,
+// each with its own colours, fading from one to the next, while shooting stars streak across.
+// One drawing for all three pictures, so they always match: the moving pads on the app's page, the card GIF Discord
+// shows, and the still app icon (the GIF's first frame).
 // Works in the browser (the page) and in Node (scripts/make-pad-art-20261102.js).
 
 export const GRID = 8;
-export const STEPS = 16;
-const BG = [16, 18, 22], OFF = [40, 44, 50];
-// One neon colour per row, top to bottom.
-export const HUES = [[255, 79, 216], [176, 92, 255], [79, 216, 255], [57, 255, 136], [255, 225, 79], [255, 140, 66], [79, 216, 255], [57, 255, 136]];
+// Time is counted in sixteenth notes at 125 BPM (120 ms each). Each design plays for two bars.
+export const SCENE_STEPS = 32;
+const FADE_STEPS = 4;
+const BG = [0, 0, 0], OFF = [34, 37, 44], STAR = [235, 242, 255];
 
-// Which pads each sixteenth note hits: row 7 kick, row 6 snare, row 5 hats, upper rows accents and fills.
+// Three colours each, laid along the grid's diagonal from the top left to the bottom right.
+const PALETTES = {
+  synthwave: [[255, 64, 200], [150, 80, 255], [60, 210, 255]],
+  aurora: [[40, 255, 170], [60, 200, 255], [150, 110, 255]],
+  sunset: [[255, 190, 70], [255, 80, 140], [190, 70, 255]],
+  ice: [[210, 245, 255], [90, 200, 255], [70, 120, 255]],
+  ultraviolet: [[255, 90, 255], [170, 60, 255], [90, 80, 255]],
+  candy: [[255, 110, 190], [255, 210, 100], [90, 230, 255]],
+  toxic: [[210, 255, 60], [60, 255, 140], [40, 220, 230]],
+  stardust: [[255, 255, 255], [170, 190, 255], [255, 170, 240]],
+  love: [[255, 120, 170], [255, 60, 110], [255, 150, 210]],
+  ember: [[255, 235, 130], [255, 120, 50], [255, 50, 100]],
+};
+
+// Repeatable "random" numbers, so the page, the GIF and the icon always agree.
+const rand = n => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+const pulse = age => Math.max(0, 1 - age / 4);
+const smooth = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+
+// The drum pattern over one bar of sixteenths: row 7 kick, row 6 snare, row 5 hats, upper rows accents and fills.
 export function hits(step) {
   const pads = [];
   if (step % 4 === 0) pads.push([7, (step / 4) * 2], [7, (step / 4) * 2 + 1]);
@@ -22,20 +42,128 @@ export function hits(step) {
   return pads;
 }
 
-// How bright each pad is at time t (in sixteenth notes, any real number): each hit flashes to full and fades over
-// four steps, and a diagonal wave keeps the whole grid glowing between hits.
-export function lights(t) {
-  const step = ((t % STEPS) + STEPS) % STEPS;
-  const grid = Array.from({ length: GRID }, (_, r) => Array.from({ length: GRID }, (_, c) => {
-    const phase = (r + c) / 2 - step * 0.5;
-    return 0.85 * Math.abs(Math.cos(phase * Math.PI / 6)) ** 1.2;
-  }));
-  for (let back = 0; back < 4; back++) {
-    const s = Math.floor(step) - back;
-    const age = step - Math.floor(step) + back;
-    for (const [r, c] of hits((s + STEPS) % STEPS)) grid[r][c] = Math.max(grid[r][c], Math.max(0, 1 - age / 4));
+// The cells in a spiral from the outside in, for the snake.
+const SPIRAL = (() => {
+  const order = [];
+  let top = 0, left = 0, bottom = GRID - 1, right = GRID - 1;
+  while (top <= bottom && left <= right) {
+    for (let c = left; c <= right; c++) order.push([top, c]);
+    for (let r = top + 1; r <= bottom; r++) order.push([r, right]);
+    for (let c = right - 1; c >= left; c--) order.push([bottom, c]);
+    for (let r = bottom - 1; r > top; r--) order.push([r, left]);
+    top++; left++; bottom--; right--;
   }
-  return grid;
+  const index = Array.from({ length: GRID }, () => new Array(GRID));
+  order.forEach(([r, c], i) => { index[r][c] = i; });
+  return index;
+})();
+
+const HEART = ['01100110', '11111111', '11111111', '11111111', '01111110', '00111100', '00011000', '00000000'];
+
+// Each design: its palette and how bright pad (r, c) is at step s (0 to SCENE_STEPS) of its two bars.
+export const SCENES = [
+  { name: 'drums', palette: 'synthwave', light(r, c, s) {
+    const phase = (r + c) / 2 - s * 0.5;
+    let b = 0.55 * Math.abs(Math.cos(phase * Math.PI / 6)) ** 1.2;
+    for (let back = 0; back < 4; back++) {
+      const step = Math.floor(s) - back;
+      if (step < 0) break;
+      if (hits(step % 16).some(([hr, hc]) => hr === r && hc === c)) b = Math.max(b, pulse(s - step));
+    }
+    return b;
+  } },
+  { name: 'ripple', palette: 'aurora', light(r, c, s) {
+    const d = Math.hypot(r - 3.5, c - 3.5), age = s % 8, ring = age * 0.85;
+    return 0.1 + 0.9 * Math.max(0, 1 - Math.abs(d - ring) * 1.1) * (1 - age / 9);
+  } },
+  { name: 'equalizer', palette: 'sunset', light(r, c, s) {
+    const beat = Math.floor(s / 2), f = s / 2 - beat;
+    const height = 1 + 7 * (rand(c * 31 + beat) * (1 - f) + rand(c * 31 + beat + 1) * f);
+    const level = GRID - r;
+    return level <= height ? 0.45 + 0.55 * (level / height) : 0.06;
+  } },
+  { name: 'rain', palette: 'ice', light(r, c, s) {
+    const head = (s * 0.75 + rand(c + 5) * 11) % 11 - 1.5;
+    const behind = head - r;
+    return behind >= 0 && behind < 3.5 ? (1 - behind / 3.5) ** 1.5 : 0.05;
+  } },
+  { name: 'spiral', palette: 'ultraviolet', light(r, c, s) {
+    const angle = Math.atan2(r - 3.5, c - 3.5), d = Math.hypot(r - 3.5, c - 3.5);
+    const lag = ((s * Math.PI / 6 - angle - d * 0.45) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    return 0.06 + 0.94 * Math.max(0, 1 - lag / 2.4) ** 1.6;
+  } },
+  { name: 'checker', palette: 'candy', light(r, c, s) {
+    const beat = Math.floor(s / 4);
+    return (r + c + beat) % 2 ? 0.25 + 0.75 * pulse(s % 4) : 0.12;
+  } },
+  { name: 'snake', palette: 'toxic', light(r, c, s) {
+    const head = (s * 2) % 64, age = (head - SPIRAL[r][c] + 64) % 64;
+    return age < 12 ? 1 - age / 12 : 0.05;
+  } },
+  { name: 'twinkle', palette: 'stardust', light(r, c, s) {
+    return 0.05 + 0.95 * Math.max(0, Math.sin(s * 0.55 + rand(r * 8 + c) * 6.283)) ** 6;
+  } },
+  { name: 'heart', palette: 'love', light(r, c, s) {
+    const beat = pulse(s % 4) * (s % 8 < 4 ? 1 : 0.6);
+    return HEART[r][c] === '1' ? 0.5 + 0.5 * beat : 0.04 + 0.12 * beat;
+  } },
+  { name: 'burst', palette: 'ember', light(r, c, s) {
+    const n = Math.floor(s / 4), age = s % 4;
+    const cr = Math.floor(rand(n * 7) * GRID), cc = Math.floor(rand(n * 13) * GRID);
+    const d = Math.hypot(r - cr, c - cc);
+    return 0.06 + 0.94 * Math.max(0, 1 - Math.abs(d - age * 1.6) * 0.9) * (1 - age / 5);
+  } },
+];
+export const LOOP_STEPS = SCENES.length * SCENE_STEPS;
+
+function mix(a, b, f) { return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]; }
+function paletteAt(name, x) {
+  const p = PALETTES[name];
+  return x < 0.5 ? mix(p[0], p[1], x * 2) : mix(p[1], p[2], x * 2 - 1);
+}
+
+// Brightness and colour of every pad at time t (in sixteenths, any real number). The last four steps of each design
+// fade into the next.
+export function padState(t) {
+  const loop = ((t % LOOP_STEPS) + LOOP_STEPS) % LOOP_STEPS;
+  const index = Math.floor(loop / SCENE_STEPS), s = loop - index * SCENE_STEPS;
+  const scene = SCENES[index], next = SCENES[(index + 1) % SCENES.length];
+  const w = smooth((s - (SCENE_STEPS - FADE_STEPS)) / FADE_STEPS);
+  const bright = [], color = [];
+  for (let r = 0; r < GRID; r++) {
+    bright.push([]); color.push([]);
+    for (let c = 0; c < GRID; c++) {
+      const x = (r + c) / (2 * GRID - 2);
+      let b = scene.light(r, c, s), col = paletteAt(scene.palette, x);
+      if (w > 0) {
+        b = b * (1 - w) + next.light(r, c, s - SCENE_STEPS) * w;
+        col = mix(col, paletteAt(next.palette, x), w);
+      }
+      bright[r].push(Math.max(0, Math.min(1, b)));
+      color[r].push(col);
+    }
+  }
+  return { bright, color };
+}
+export const lights = t => padState(t).bright;
+
+// Shooting stars: one starts every six steps from the top or left edge, crosses in five steps and leaves a tail.
+const STAR_EVERY = 6, STAR_STEPS = 5;
+function stars(t, size) {
+  const list = [];
+  for (const k of [Math.floor((t + 3) / STAR_EVERY), Math.floor((t + 3) / STAR_EVERY) - 1]) {
+    const p = (t + 3 - k * STAR_EVERY) / STAR_STEPS;
+    if (p < 0 || p > 1.3) continue;
+    const angle = (0.45 + rand(k * 3 + 1) * 0.35) * Math.PI / 2;
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    const fromTop = rand(k * 5 + 2) < 0.6;
+    const x0 = fromTop ? (rand(k * 7 + 3) * 0.7 - 0.1) * size : -0.08 * size;
+    const y0 = fromTop ? -0.08 * size : rand(k * 7 + 3) * 0.6 * size;
+    const travel = 1.5 * size;
+    list.push({ x: x0 + dx * travel * p, y: y0 + dy * travel * p, dx, dy, tail: 0.32 * size,
+      width: Math.max(1, size / 170), fade: p > 1 ? 1 - (p - 1) / 0.3 : 1 });
+  }
+  return list;
 }
 
 // Distance from a point to a rounded square centred on 0,0 (negative inside).
@@ -44,12 +172,13 @@ function boxDistance(px, py, half, radius) {
   return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - radius;
 }
 
-// Draws one frame into `out` (RGBA, size×size×4). Everything scales with size, so 160, 240 and 1024 look alike.
+// Draws one frame into `out` (RGBA, size×size×4). Everything scales with size, so 160, 448 and 1024 look alike.
 export function drawPads(out, size, t) {
-  const light = lights(t);
+  const { bright, color } = padState(t);
   const unit = size / 1024;
-  const margin = 40 * unit, cell = (size - margin * 2) / GRID, half = 50 * unit, radius = 18 * unit;
+  const margin = 40 * unit, cell = (size - margin * 2) / GRID, half = 50 * unit, radius = 7 * unit;
   const glowFall = 9 * unit, rim = 5 * unit;
+  const shooting = stars(t, size);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       let r0 = BG[0], g0 = BG[1], b0 = BG[2];
@@ -60,12 +189,11 @@ export function drawPads(out, size, t) {
         if (r < 0 || r >= GRID) continue;
         for (let c = col - 1; c <= col + 1; c++) {
           if (c < 0 || c >= GRID) continue;
-          const b = light[r][c];
+          const b = bright[r][c];
           if (b < 0.02) continue;
           const d = boxDistance(fx - (margin + (c + 0.5) * cell), fy - (margin + (r + 0.5) * cell), half, radius);
           if (d <= 0) continue;
-          const glow = b * 0.6 * Math.exp(-d / glowFall);
-          const hue = HUES[r];
+          const glow = b * 0.6 * Math.exp(-d / glowFall), hue = color[r][c];
           r0 += hue[0] * glow; g0 += hue[1] * glow; b0 += hue[2] * glow;
         }
       }
@@ -74,7 +202,7 @@ export function drawPads(out, size, t) {
         const cx = fx - (margin + (col + 0.5) * cell), cy = fy - (margin + (row + 0.5) * cell);
         const d = boxDistance(cx, cy, half, radius);
         if (d < 1) {
-          const edge = Math.min(1, 1 - d), b = light[row][col], hue = HUES[row];
+          const edge = Math.min(1, 1 - d), b = bright[row][col], hue = color[row][col];
           const hot = b * Math.max(0, 1 - Math.hypot(cx, cy) / (half * 1.25));
           let fr = OFF[0] + (hue[0] - OFF[0]) * b, fg = OFF[1] + (hue[1] - OFF[1]) * b, fb = OFF[2] + (hue[2] - OFF[2]) * b;
           const white = hot * hot * 0.55;
@@ -85,6 +213,18 @@ export function drawPads(out, size, t) {
           }
           r0 += (fr - r0) * edge; g0 += (fg - g0) * edge; b0 += (fb - b0) * edge;
         }
+      }
+      // Shooting stars on top: a bright head and a fading tail.
+      for (const star of shooting) {
+        const px = fx - star.x, py = fy - star.y;
+        const along = -(px * star.dx + py * star.dy);
+        if (along < -star.width * 6 || along > star.tail) continue;
+        const across = Math.abs(px * star.dy - py * star.dx);
+        if (across > star.width * 8) continue;
+        const tail = along > 0 ? (1 - along / star.tail) ** 2 * Math.exp(-((across / star.width) ** 2)) : 0;
+        const head = Math.exp(-((Math.hypot(px, py) / (star.width * 2.2)) ** 2)) * 1.4;
+        const k = Math.max(tail, head) * star.fade;
+        r0 += STAR[0] * k; g0 += STAR[1] * k; b0 += STAR[2] * k;
       }
       const o = (y * size + x) * 4;
       out[o] = r0 > 255 ? 255 : r0; out[o + 1] = g0 > 255 ? 255 : g0; out[o + 2] = b0 > 255 ? 255 : b0; out[o + 3] = 255;
@@ -111,7 +251,7 @@ export function startPage(doc = globalThis.document) {
   let last = -1;
   const frame = now => {
     const t = still ? 0 : (now - started) / STEP_MS;
-    // About 25 frames a second, the same as the card GIF.
+    // About 25 frames a second.
     if (t !== last && (last < 0 || Math.abs(t - last) >= 0.33)) {
       last = t;
       for (const view of views) {

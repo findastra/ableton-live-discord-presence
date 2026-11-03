@@ -1,17 +1,17 @@
 // Makes the two picture files from the one drawing in public/pad-art-20261102.js:
-//  - public/pad-grid-card-20261102.gif: the moving card picture Discord shows (240×240, 64 frames, 2 bars at 125 BPM)
+//  - public/pad-grid-card-20261102.gif: the moving card picture Discord shows (160×160, every design in turn, at 125 BPM)
 //  - public/pad-grid-icon-20261102.png: the still app icon (1024×1024), the card's first frame
 // The app's page draws the same thing live. Run: node scripts/make-pad-art-20261102.js
 import { writeFileSync, realpathSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { drawPads, STEPS } from '../public/pad-art-20261102.js';
+import { drawPads, LOOP_STEPS } from '../public/pad-art-20261102.js';
 import { encodeGif } from './gif-encoder-20261102.js';
 
-export const CARD_SIZE = 240, ICON_SIZE = 1024, SUBSTEPS = 4, DELAY = 3; // 4 frames per step, 30 ms each = 125 BPM
+export const CARD_SIZE = 160, ICON_SIZE = 1024, SUBSTEPS = 2, DELAY = 6; // 2 frames per step, 60 ms each = 125 BPM
 
 export function cardFrames() {
-  return Array.from({ length: STEPS * SUBSTEPS }, (_, i) => drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, i / SUBSTEPS));
+  return Array.from({ length: LOOP_STEPS * SUBSTEPS }, (_, i) => drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, i / SUBSTEPS));
 }
 
 // Median cut: split the colours the frames use into 256 boxes, each box's average is one palette colour.

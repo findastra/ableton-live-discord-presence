@@ -9,7 +9,7 @@ import { readProbe, probeScript, detectAbleton } from '../src/detector-20261102.
 import { setStartup, startupEnabled, LAUNCHER_NAME } from '../src/windows-startup-20261102.js';
 import { encodeGif } from '../scripts/gif-encoder-20261102.js';
 import { makeCardGif, makeIconPng, cardFrames, CARD_SIZE } from '../scripts/make-pad-art-20261102.js';
-import { drawPads, lights } from '../public/pad-art-20261102.js';
+import { drawPads, lights, SCENES, SCENE_STEPS } from '../public/pad-art-20261102.js';
 
 test('reads the set name and Live edition from the window title', () => {
   assert.deepEqual(parseTitle('Night Drive - Ableton Live 12 Trial'), { set: 'Night Drive', edition: 'Live 12 Trial' });
@@ -128,11 +128,12 @@ test('the GIF encoder round-trips, including a full 4096-code dictionary', () =>
   assert.deepEqual(decodeFrames(encodeGif(200, 200, palette, [noise], 10)), [noise]);
 });
 
-test('the card picture is a looping 64-frame pad grid that matches the shipped file', () => {
+test('the card picture plays every design once, stays under 10 MB and matches the shipped file', () => {
   const gif = makeCardGif();
-  assert.ok(gif.length < 4 * 1024 * 1024);
+  // GitHub serves larger raw files without an image type, and Discord then shows no picture.
+  assert.ok(gif.length < 10 * 1024 * 1024);
   const frames = decodeFrames(gif);
-  assert.equal(frames.length, 64);
+  assert.equal(frames.length, SCENES.length * SCENE_STEPS * 2);
   assert.equal(frames[0].length, CARD_SIZE * CARD_SIZE);
   assert.deepEqual(readFileSync(new URL('../public/pad-grid-card-20261102.gif', import.meta.url)), gif);
 });
