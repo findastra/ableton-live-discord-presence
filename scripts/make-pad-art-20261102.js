@@ -1,5 +1,5 @@
 // Makes the two picture files from the one drawing in public/pad-art-20261102.js:
-//  - public/pad-grid-card-20261102.gif: the moving card picture Discord shows (160×160, every design in turn, at 125 BPM)
+//  - public/pad-grid-card-20261102.gif: the moving card picture Discord shows (240×240, every design in turn, at 125 BPM, each frame with its own colours)
 //  - public/pad-grid-icon-20261102.png: the still app icon (1024×1024), the card's first frame
 // The app's page draws the same thing live. Run: node scripts/make-pad-art-20261102.js
 import { writeFileSync, realpathSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { drawPads, LOOP_STEPS, CARD_FILL } from '../public/pad-art-20261102.js';
 import { encodeGif } from './gif-encoder-20261102.js';
 
-export const CARD_SIZE = 160, ICON_SIZE = 1024, SUBSTEPS = 2, DELAY = 6; // 2 frames per step, 60 ms each = 125 BPM
+export const CARD_SIZE = 240, ICON_SIZE = 1024, SUBSTEPS = 2, DELAY = 6; // 2 frames per step, 60 ms each = 125 BPM
 
 export function cardFrames() {
   return Array.from({ length: LOOP_STEPS * SUBSTEPS }, (_, i) => drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, i / SUBSTEPS, CARD_FILL));
@@ -67,10 +67,13 @@ export function indexFrames(frames, palette) {
   });
 }
 
+// Each frame gets its own 256 colours, with true black always first, so the gaps between pads stay black and the
+// pads never smear into one square (Astra, 2026-11-03).
 export function makeCardGif() {
   const frames = cardFrames();
-  const palette = medianCut(frames);
-  return encodeGif(CARD_SIZE, CARD_SIZE, palette, indexFrames(frames, palette), DELAY);
+  const palettes = frames.map(frame => [[0, 0, 0], ...medianCut([frame], 255)]);
+  const indexed = frames.map((frame, f) => indexFrames([frame], palettes[f])[0]);
+  return encodeGif(CARD_SIZE, CARD_SIZE, palettes[0], indexed, DELAY, palettes);
 }
 
 const CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });

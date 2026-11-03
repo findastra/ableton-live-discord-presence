@@ -95,7 +95,10 @@ function decodeFrames(gif) {
   while (gif[p] !== 0x3b) {
     if (gif[p] === 0x21) { p += 2; while (gif[p]) p += gif[p] + 1; p++; continue; }
     assert.equal(gif[p], 0x2c);
+    const packed = gif[p + 9];
     p += 10;
+    // A frame's own colour table follows its descriptor.
+    if (packed & 0x80) p += 3 * (1 << ((packed & 7) + 1));
     const min = gif[p++];
     const data = [];
     while (gif[p]) { data.push(...gif.subarray(p + 1, p + 1 + gif[p])); p += gif[p] + 1; }
@@ -134,6 +137,8 @@ test('the card picture plays every design once, stays under 10 MB and matches th
   assert.ok(gif.length < 10 * 1024 * 1024);
   const frames = decodeFrames(gif);
   assert.equal(frames.length, SCENES.length * SCENE_STEPS * 2);
+  // Every frame keeps true black for the gaps between pads (index 0 of its own colours).
+  assert.ok(frames.every(frame => frame.includes(0)));
   assert.equal(frames[0].length, CARD_SIZE * CARD_SIZE);
   assert.deepEqual(readFileSync(new URL('../public/pad-grid-card-20261102.gif', import.meta.url)), gif);
 });

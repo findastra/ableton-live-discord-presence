@@ -32,28 +32,37 @@ function lzw(indices, minCodeSize) {
 }
 
 // palette: [[r,g,b], ...] up to 256; frames: Uint8Array of palette indices, width*height each; delay in 1/100 s.
-export function encodeGif(width, height, palette, frames, delay) {
+// framePalettes (optional): one palette per frame, written as each frame's own colour table, so a long animation
+// with many colours keeps every frame's exact colours instead of sharing 256 across all of them.
+export function encodeGif(width, height, palette, frames, delay, framePalettes = null) {
   let depth = 1;
   while ((1 << depth) < palette.length) depth++;
+  if (framePalettes) depth = 8;
   const minCodeSize = Math.max(2, depth);
-  const out = [...Buffer.from('GIF89a')];
+  const out = [];
+  const push = bytes => { for (const b of bytes) out.push(b); };
   const u16 = n => out.push(n & 0xff, n >> 8);
+  push(Buffer.from('GIF89a'));
   u16(width); u16(height);
   out.push(0xf0 | (depth - 1), 0, 0);
-  for (let i = 0; i < 1 << depth; i++) out.push(...(palette[i] ?? [0, 0, 0]));
+  for (let i = 0; i < 1 << depth; i++) push(palette[i] ?? [0, 0, 0]);
   // Netscape loop block: repeat forever.
-  out.push(0x21, 0xff, 0x0b, ...Buffer.from('NETSCAPE2.0'), 0x03, 0x01, 0, 0, 0);
-  for (const frame of frames) {
+  push([0x21, 0xff, 0x0b, ...Buffer.from('NETSCAPE2.0'), 0x03, 0x01, 0, 0, 0]);
+  frames.forEach((frame, f) => {
     out.push(0x21, 0xf9, 0x04, 0x00); u16(delay); out.push(0, 0);
-    out.push(0x2c); u16(0); u16(0); u16(width); u16(height); out.push(0);
+    out.push(0x2c); u16(0); u16(0); u16(width); u16(height);
+    if (framePalettes) {
+      out.push(0x80 | (depth - 1));
+      for (let i = 0; i < 1 << depth; i++) push(framePalettes[f][i] ?? [0, 0, 0]);
+    } else out.push(0);
     out.push(minCodeSize);
     const data = lzw(frame, minCodeSize);
     for (let i = 0; i < data.length; i += 255) {
       const block = data.slice(i, i + 255);
-      out.push(block.length, ...block);
+      out.push(block.length); push(block);
     }
     out.push(0);
-  }
+  });
   out.push(0x3b);
   return Buffer.from(out);
 }
