@@ -90,7 +90,7 @@ function send(res, status, body, type = 'application/json') {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://findastra.github.io; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   });
   res.end(type === 'application/json' ? JSON.stringify(body) : body);
 }
@@ -107,9 +107,12 @@ async function jsonBody(req) {
 
 const assets = {
   '/': ['index-20261102.html', 'text/html; charset=utf-8'],
+  '/index-20261102.html': ['index-20261102.html', 'text/html; charset=utf-8'],
   '/app-20261102.js': ['app-20261102.js', 'text/javascript; charset=utf-8'],
   '/style-20261102.css': ['style-20261102.css', 'text/css; charset=utf-8'],
   '/pad-grid-card-20261102.gif': ['pad-grid-card-20261102.gif', 'image/gif'],
+  '/pad-grid-icon-20261102.png': ['pad-grid-icon-20261102.png', 'image/png'],
+  '/pad-art-20261102.js': ['pad-art-20261102.js', 'text/javascript; charset=utf-8'],
 };
 
 const server = http.createServer(async (req, res) => {

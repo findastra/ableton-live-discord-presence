@@ -1,12 +1,12 @@
 // What the Discord card says, and the settings that shape it.
 
 // The project's own Discord application ("Drum Session" in the Developer Portal). Application IDs are
-// public, so friends can use it without any setup. Empty until Astra creates it; the page asks for one.
-export const BUILT_IN_CLIENT_ID = '';
+// public, so friends can use it without any setup. Registered as "Ableton Live Presence" (Astra, 2026-11-02).
+export const BUILT_IN_CLIENT_ID = '1567036812768186491';
 
 // Card art: loaded by Discord straight from the public repo, so nobody has to upload it in the Developer Portal.
 // Bump ?v= whenever the card art changes so Discord fetches the new image instead of a cached one.
-export const PAD_GRID_URL = 'https://raw.githubusercontent.com/findastra/ableton-live-discord-presence/main/public/pad-grid-card-20261102.gif?v=1';
+export const PAD_GRID_URL = 'https://raw.githubusercontent.com/findastra/ableton-live-discord-presence/main/public/pad-grid-card-20261102.gif?v=2';
 
 // Drum gear found by its Windows device name. The APC64 is Astra's pad controller.
 export const DEFAULT_DRUM_DEVICES = ['APC64'];
@@ -28,12 +28,13 @@ export class Presence {
   mode = 'off';
   startedAt = null;
   setMode(mode) {
-    if (!['off', 'auto'].includes(mode)) throw new Error('Choose Off or Automatic.');
+    if (!['off', 'auto', 'manual'].includes(mode)) throw new Error('Choose Start, Stop, or Automatic.');
     if (mode !== this.mode) this.startedAt = null;
     this.mode = mode;
   }
+  // Start (manual) shares straight away; Automatic shares while Ableton Live is open.
   update(active, now = Date.now()) {
-    if (!(this.mode === 'auto' && active)) this.startedAt = null;
+    if (!(this.mode === 'manual' || (this.mode === 'auto' && active))) this.startedAt = null;
     else this.startedAt ??= Math.floor(now / 1000);
     return this.startedAt;
   }
@@ -54,7 +55,7 @@ export function activity(startedAt, detection = {}, config = {}) {
 }
 
 export function validateConfig(input = {}) {
-  const clientId = String(input.clientId ?? BUILT_IN_CLIENT_ID).trim();
+  const clientId = String(input.clientId || BUILT_IN_CLIENT_ID).trim();
   const savedImage = String(input.image || PAD_GRID_URL).trim();
   // Refresh only this app's built-in art; keep custom image URLs and asset keys.
   const image = /^https:\/\/raw\.githubusercontent\.com\/findastra\/ableton-live-discord-presence\/main\/public\/pad-grid-card-\d{8}\.gif(?:\?v=\d+)?$/.test(savedImage) ? PAD_GRID_URL : savedImage;

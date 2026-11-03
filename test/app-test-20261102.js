@@ -4,11 +4,12 @@ import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseTitle, activity, validateConfig, Presence, PAD_GRID_URL } from '../src/card-20261102.js';
+import { parseTitle, activity, validateConfig, Presence, PAD_GRID_URL, BUILT_IN_CLIENT_ID } from '../src/card-20261102.js';
 import { readProbe, probeScript, detectAbleton } from '../src/detector-20261102.js';
 import { setStartup, startupEnabled, LAUNCHER_NAME } from '../src/windows-startup-20261102.js';
 import { encodeGif } from '../scripts/gif-encoder-20261102.js';
-import { makeGif, frame, SIZE } from '../scripts/make-pad-grid-20261102.js';
+import { makeCardGif, makeIconPng, cardFrames, CARD_SIZE } from '../scripts/make-pad-art-20261102.js';
+import { drawPads, lights } from '../public/pad-art-20261102.js';
 
 test('reads the set name and Live edition from the window title', () => {
   assert.deepEqual(parseTitle('Night Drive - Ableton Live 12 Trial'), { set: 'Night Drive', edition: 'Live 12 Trial' });
@@ -34,7 +35,10 @@ test('the card says drums only with drum gear, and never "Untitled"', () => {
 });
 
 test('settings default to the recommended answers and reject bad values', () => {
-  assert.deepEqual(validateConfig({}), { clientId: '', image: PAD_GRID_URL, showSetName: true, drumDevices: ['APC64'], automaticOnStart: true });
+  assert.equal(BUILT_IN_CLIENT_ID, '1567036812768186491');
+  assert.deepEqual(validateConfig({}), { clientId: BUILT_IN_CLIENT_ID, image: PAD_GRID_URL, showSetName: true, drumDevices: ['APC64'], automaticOnStart: true });
+  // A settings file saved before the built-in ID existed picks it up.
+  assert.equal(validateConfig({ clientId: '' }).clientId, BUILT_IN_CLIENT_ID);
   assert.throws(() => validateConfig({ clientId: '123' }), /Application ID/);
   assert.equal(validateConfig({ clientId: '1555096326734094356' }).clientId, '1555096326734094356');
   // Device names reach a PowerShell filter, so quotes and wildcards are dropped.
@@ -50,6 +54,10 @@ test('the timer starts when Ableton opens and stops when it closes or sharing is
   assert.equal(presence.update(false, 9000), null);
   presence.setMode('off');
   assert.equal(presence.update(true, 9000), null);
+  // Start shares straight away, even before Ableton opens.
+  presence.setMode('manual');
+  assert.equal(presence.update(false, 12000), 12);
+  assert.throws(() => presence.setMode('always'), /Start, Stop, or Automatic/);
 });
 
 test('the probe reads only the window title and a device count', async () => {
@@ -120,12 +128,20 @@ test('the GIF encoder round-trips, including a full 4096-code dictionary', () =>
   assert.deepEqual(decodeFrames(encodeGif(200, 200, palette, [noise], 10)), [noise]);
 });
 
-test('the card picture is a looping 16-frame pad grid under 1 MB that matches the shipped file', () => {
-  const gif = makeGif();
-  assert.ok(gif.length < 1024 * 1024);
+test('the card picture is a looping 64-frame pad grid that matches the shipped file', () => {
+  const gif = makeCardGif();
+  assert.ok(gif.length < 4 * 1024 * 1024);
   const frames = decodeFrames(gif);
-  assert.equal(frames.length, 16);
-  assert.deepEqual(frames[3], frame(3));
-  assert.equal(SIZE, 320);
+  assert.equal(frames.length, 64);
+  assert.equal(frames[0].length, CARD_SIZE * CARD_SIZE);
   assert.deepEqual(readFileSync(new URL('../public/pad-grid-card-20261102.gif', import.meta.url)), gif);
+});
+
+test('the app icon is the card\'s first frame, drawn at 1024, and matches the shipped file', () => {
+  assert.deepEqual(readFileSync(new URL('../public/pad-grid-icon-20261102.png', import.meta.url)), makeIconPng());
+  // The card's first frame is the same drawing as the icon, at the card's size.
+  assert.deepEqual(cardFrames()[0], drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, 0));
+  // Drum hits flash to full brightness on their step.
+  assert.equal(lights(0)[7][0], 1);
+  assert.ok(lights(0.5)[7][0] < 1);
 });

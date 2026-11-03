@@ -1,56 +1,102 @@
 const $ = id => document.getElementById(id);
-const form = $('settings');
-let editing = false;
-form.addEventListener('input', () => { editing = true; });
+const hosted = document.body.hasAttribute('data-hosted') || location.protocol === 'file:';
+let state;
+let ended = false;
+$('topic').addEventListener('click', async () => {
+  if (hosted) {
+    const on = $('topic').getAttribute('aria-pressed') !== 'true';
+    $('topic').setAttribute('aria-pressed', String(on));
+    $('topic').textContent = on ? 'Hide Song Name' : 'Show Song Name';
+    $('project-preview').textContent = on ? 'Working on Night Drive' : 'Jamming';
+    return;
+  }
+  if (!state) return;
+  $('topic').disabled = true;
+  try { await request('/api/config', { ...state.config, showSetName: !state.config.showSetName }); await refresh(); }
+  catch {}
+  finally { $('topic').disabled = false; }
+});
 
-async function post(path, body) {
-  const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+async function request(path, body) {
+  const response = await fetch(path, body === undefined ? {} : {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Something went wrong.');
+  if (!response.ok) throw new Error(data.error || 'Could not update the app.');
   return data;
 }
 
+function drawTimer() {
+  $('timer').parentElement.classList.remove('running');
+  if (ended) { $('timer').textContent = 'App closed. You can close this tab.'; return; }
+  if (!state?.startedAt) { $('timer').textContent = 'Ready when you are'; return; }
+  const elapsed = Math.max(0, Math.floor(Date.now() / 1000) - state.startedAt);
+  // Discord writes elapsed time as 0:17, 12:05 or 1:02:09, in green beside a controller.
+  const h = Math.floor(elapsed / 3600), m = Math.floor(elapsed / 60) % 60, sec = String(elapsed % 60).padStart(2, '0');
+  $('timer').textContent = h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+  $('timer').parentElement.classList.add('running');
+}
+
 async function refresh() {
-  let status;
-  try { status = await (await fetch('/api/status')).json(); }
-  catch { $('message').textContent = 'The app is not running. Start it again from its folder.'; return; }
-  $('message').textContent = status.message;
-  const card = status.card;
-  $('card-details').textContent = card.details;
-  $('card-state').textContent = card.state;
-  $('card-live').textContent = status.detection.active ? card.assets.large_text : 'Waiting for Ableton Live';
-  for (const button of document.querySelectorAll('[data-mode]')) button.setAttribute('aria-pressed', String(button.dataset.mode === status.mode));
-  if (!editing) {
-    form.clientId.value = status.config.clientId;
-    form.showSetName.checked = status.config.showSetName;
-    form.drumDevices.value = status.config.drumDevices.join(', ');
-    $('startup').checked = status.startupEnabled;
+  if (ended || hosted) return;
+  try {
+    state = await request('/api/status');
+    $('model-preview').textContent = state.card.details;
+    $('project-preview').textContent = state.card.state;
+    $('topic').textContent = state.config.showSetName ? 'Hide Song Name' : 'Show Song Name';
+    $('topic').setAttribute('aria-pressed', String(state.config.showSetName === true));
+    // Start, Stop and Automatic are one choice: only the current mode is lit.
+    for (const mode of ['manual', 'off', 'auto']) $(mode).setAttribute('aria-pressed', String(state.mode === mode));
+    drawTimer();
+  } catch {
+    state = null;
+    drawTimer();
   }
 }
 
-for (const button of document.querySelectorAll('[data-mode]')) {
-  button.addEventListener('click', async () => {
-    try { await post('/api/mode', { mode: button.dataset.mode }); } catch (error) { $('message').textContent = error.message; }
-    void refresh();
+for (const mode of ['manual', 'off', 'auto']) {
+  $(mode).addEventListener('click', async () => {
+    if (hosted) {
+      for (const other of ['manual', 'off']) $(other).setAttribute('aria-pressed', String(other === mode));
+      state = { startedAt: mode === 'manual' ? (state?.startedAt || Math.floor(Date.now() / 1000)) : null };
+      drawTimer();
+      return;
+    }
+    $(mode).disabled = true;
+    try { await request('/api/mode', { mode }); await refresh(); }
+    catch {}
+    finally { $(mode).disabled = false; }
   });
 }
-
-form.addEventListener('submit', async event => {
-  event.preventDefault();
-  try {
-    await post('/api/config', { clientId: form.clientId.value.trim(), showSetName: form.showSetName.checked,
-      drumDevices: form.drumDevices.value.split(',').map(name => name.trim()).filter(Boolean) });
-    await post('/api/startup', { enabled: $('startup').checked });
-    editing = false;
-    $('message').textContent = 'Saved.';
-  } catch (error) { $('message').textContent = error.message; }
-  setTimeout(refresh, 600);
-});
-
+// Quit closes the whole app, so a stray click only asks: a second click within 3 seconds quits.
+let quitAsk;
 $('quit').addEventListener('click', async () => {
-  try { await post('/api/quit', {}); } catch { /* Already closing. */ }
-  $('message').textContent = 'The app has quit. Your card is gone from Discord.';
+  if (!quitAsk) {
+    $('quit').textContent = 'Click again to quit';
+    quitAsk = setTimeout(() => { quitAsk = null; $('quit').textContent = 'Quit'; }, 3000);
+    return;
+  }
+  clearTimeout(quitAsk);
+  try {
+    await request('/api/quit', {});
+    ended = true;
+    state = null;
+    drawTimer();
+    document.querySelectorAll('button').forEach(button => { button.disabled = true; });
+  } catch {}
 });
-
-void refresh();
+if (hosted) {
+  document.body.classList.add('hosted');
+  $('download').hidden = false;
+  $('quit').hidden = true;
+  $('model-preview').textContent = 'Playing drums';
+  $('project-preview').textContent = 'Working on Night Drive';
+  $('topic').textContent = 'Hide Song Name';
+  $('topic').setAttribute('aria-pressed', 'true');
+  $('manual').setAttribute('aria-pressed', 'true');
+  $('off').setAttribute('aria-pressed', 'false');
+  state = { startedAt: Math.floor(Date.now() / 1000) - 42 * 60 };
+  drawTimer();
+} else void refresh();
 setInterval(refresh, 2000);
+setInterval(drawTimer, 1000);

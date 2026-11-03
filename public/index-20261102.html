@@ -1,49 +1,36 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ableton Live Discord Presence</title>
-<link rel="stylesheet" href="/style-20261102.css">
-<script type="module" src="/app-20261102.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Share when you're playing drums or making music in Ableton Live on Discord, with your set's name and an elapsed timer. Free local companion.">
+<title>Ableton Live Discord Presence</title><link rel="icon" href="./pad-grid-icon-20261102.png">
+<link rel="stylesheet" href="./style-20261102.css"><script src="./app-20261102.js" defer></script><script type="module" src="./pad-art-20261102.js"></script>
 </head>
 <body>
+<header><a class="brand" href="./">Ableton Live Discord Presence</a></header>
 <main>
-  <header>
-    <h1>Ableton Live Discord Presence</h1>
-    <p id="message" role="status">Loading…</p>
-  </header>
-
-  <section class="preview" aria-label="Card preview">
-    <img src="/pad-grid-card-20261102.gif" alt="Neon pad grid playing a drum pattern" width="96" height="96">
-    <div>
-      <p class="title" id="card-name">Ableton Live</p>
-      <p id="card-details">Making music</p>
-      <p id="card-state">Jamming</p>
-      <p class="muted" id="card-live">Waiting for Ableton Live</p>
-    </div>
-  </section>
-
-  <section class="controls" aria-label="Sharing">
-    <button type="button" data-mode="auto">Automatic</button>
-    <button type="button" data-mode="off">Off</button>
-  </section>
-
-  <form id="settings">
-    <label>Discord Application ID
-      <input name="clientId" inputmode="numeric" autocomplete="off" placeholder="17–20 digits">
-    </label>
-    <label class="check"><input type="checkbox" name="showSetName"> Show the song’s name (never “Untitled”)</label>
-    <label>Drum gear (Windows device names, comma separated)
-      <input name="drumDevices" autocomplete="off" placeholder="APC64">
-    </label>
-    <label class="check"><input type="checkbox" id="startup"> Start quietly when Windows starts</label>
-    <div class="row">
-      <button type="submit">Save</button>
-      <button type="button" id="quit" class="ghost">Quit app</button>
-    </div>
-  </form>
-  <p class="muted small">Reads only Ableton’s window title and your device names. Never audio, notes or files.</p>
+<section class="hero" aria-label="Ableton Live Discord Presence">
+<div class="galaxy official-galaxy"><img src="./pad-grid-icon-20261102.png" width="1024" height="1024" decoding="async" alt="An 8×8 grid of neon drum pads glowing on graphite"><canvas data-pad-art data-size="448" role="img" aria-label="Neon drum pads lighting up in a two-bar drum pattern"></canvas></div>
+<h1><span>Ableton Live</span><span>Presence</span></h1>
+</section>
+<section class="workspace" aria-label="Discord presence controls">
+<h2 class="headline">A little rhythm.<br>A whole groove.</h2>
+<div class="session"><p id="intro">Discord presence card showing when you’re playing drums or making music in Ableton Live, the song you’re working on (set name), and for how long. Your friends see the same card. It knows you’re on the drums when your pad controller is plugged in. Want AI cards too? See <a href="https://github.com/findastra/ai-discord-presence" target="_blank" rel="noreferrer">AI Discord Presence on GitHub ↗</a>.</p>
+<div id="download" hidden><a class="button primary" href="https://github.com/findastra/ableton-live-discord-presence/archive/refs/heads/main.zip" download>Download for Windows ↓</a><a class="button" href="http://127.0.0.1:38763/">Open companion ↗</a><p class="note">Free · Windows 10/11 · <a href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">Node.js 24+</a> required</p></div>
+</div>
+<div class="controls"><div class="buttons"><button id="manual" aria-pressed="false">Start</button><button id="off" aria-pressed="true">Stop</button><button id="auto" aria-pressed="false">Automatic</button><button id="topic" aria-pressed="false">Show Song Name</button><button id="quit">Quit</button></div>
+<aside class="card-wrap"><div class="card-label"><span>DISCORD PRESENCE ON YOUR PROFILE</span></div><div class="preview"><div class="preview-top"><span>Playing</span><span class="dots" aria-hidden="true">•••</span></div><div class="preview-body"><div class="official-card-galaxy"><img src="./pad-grid-card-20261102.gif" alt=""></div><div><strong>Ableton Live</strong><p id="model-preview">Making music</p><p class="small" id="project-preview">Jamming</p><p class="elapsed"><svg class="pad" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.5 6h9a5.5 5.5 0 0 1 5.4 6.5l-.8 4.4a2.6 2.6 0 0 1-4.5 1.3L14.8 16H9.2l-1.8 2.2a2.6 2.6 0 0 1-4.5-1.3l-.8-4.4A5.5 5.5 0 0 1 7.5 6Zm-.5 3v1.5H5.5v1.5H7v1.5h1.5V12H10v-1.5H8.5V9H7Zm9.5 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm-2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm4 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm-2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg><span id="timer">Ready when you are</span></p></div></div></div>
+</aside>
+</div>
+</section>
 </main>
-</body>
-</html>
+<!-- the unified footer, the same as on every pet program page (hub apps/pet-programs, Astra 2026-10-20): By Astra, ✦, the
+       photostar, ✦, Find Out More and the links (Astra, 2026-10-27) -->
+  <footer class="foot dark astra-footer" aria-label="By Astra and her links">
+  <div class="footer-line">
+  <div class="footer-group footer-by"><span class="footer-title">By Astra</span></div>
+  <span class="footer-sparkle" aria-hidden="true">✦</span><a class="footer-star" target="_blank" rel="noopener" href="https://findastra.github.io/astras-star-window/" title="Astra's photostar" aria-label="Astra's photostar"><img src="https://findastra.github.io/astras-star-window/star-window.svg" alt="" width="48" height="48" loading="lazy"></a>
+  <div class="footer-group footer-more"><span class="footer-title">Find Out More</span><span class="footer-icons"><a target="_blank" rel="noopener" href="https://github.com/findastra" title="GitHub: Astra" aria-label="GitHub: Astra"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.24.77-.54v-2.09c-3.14.68-3.8-1.33-3.8-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.68.08-.68 1.13.08 1.73 1.16 1.73 1.16 1 1.73 2.63 1.23 3.27.94.1-.73.4-1.23.71-1.51-2.51-.29-5.15-1.26-5.15-5.58 0-1.23.44-2.24 1.16-3.03-.12-.29-.5-1.43.11-2.98 0 0 .95-.3 3.08 1.16A10.7 10.7 0 0 1 12 6.12c.95 0 1.9.13 2.8.38 2.14-1.46 3.08-1.16 3.08-1.16.61 1.55.23 2.69.11 2.98.72.79 1.16 1.8 1.16 3.03 0 4.33-2.65 5.29-5.17 5.57.41.35.77 1.03.77 2.08v3.09c0 .3.2.65.78.54A11.2 11.2 0 0 0 12 .8Z"/></svg></a><a target="_blank" rel="noopener" href="https://discord.gg/YJUHtGGrJe" title="Mommy’s Discord: Join MMY" aria-label="Mommy’s Discord: Join MMY"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18.2 18.2 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.5C.6 9.1-.3 13.6.1 18a19.8 19.8 0 0 0 6 3l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.1 14.1 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1L18 21a19.8 19.8 0 0 0 6-3c.5-5.1-.8-9.6-3.7-13.6ZM8 15.3c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.5 8 10.5s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></svg></a><a target="_blank" rel="noopener" href="https://www.tiktok.com/@findastra" title="VR TikTok: @findastra" aria-label="VR TikTok: @findastra"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 2c.4 2.7 1.9 4.3 4.5 4.5v3.4a9 9 0 0 1-4.5-1.4v7.4a6.3 6.3 0 1 1-5.5-6.3v3.5a2.9 2.9 0 1 0 2 2.8V2Z"/></svg></a><a target="_blank" rel="noopener" href="https://www.tiktok.com/@astra_on_fire" title="Pole Dance TikTok: @astra_on_fire" aria-label="Pole Dance TikTok: @astra_on_fire"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 2c.4 2.7 1.9 4.3 4.5 4.5v3.4a9 9 0 0 1-4.5-1.4v7.4a6.3 6.3 0 1 1-5.5-6.3v3.5a2.9 2.9 0 1 0 2 2.8V2Z"/></svg></a><a target="_blank" rel="noopener" href="https://www.instagram.com/astra_on_fire" title="VRChat Instagram: @astra_on_fire" aria-label="VRChat Instagram: @astra_on_fire"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3c1.2-.1 1.6-.1 4.8-.1ZM12 6.9a5.1 5.1 0 1 0 0 10.2 5.1 5.1 0 0 0 0-10.2Zm0 8.4a3.3 3.3 0 1 1 0-6.6 3.3 3.3 0 0 1 0 6.6Zm5.3-9.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg></a></span></div>
+  </div>
+  </footer>
+</body></html>
