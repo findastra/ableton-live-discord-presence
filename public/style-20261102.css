@@ -145,3 +145,7 @@ justify-content:center;gap:14px}.headline,.session{align-self:stretch}.controls{
    (Astra, 2026-11-02). The card shows galaxy-card.gif, the same picture Discord shows. */
 :root{--hh:max(180px,calc(100vh - var(--reserve)));--gw:min(calc(var(--hh) - 12px),100vw)}
 .galaxy{top:0}h1{z-index:1;text-shadow:0 0 18px #000,0 0 6px #000}
+
+/* Ableton only: the pad square at three quarters of the galaxy's size, centred in the space above the line
+   (Astra, 2026-11-03). */
+.official-galaxy canvas,.galaxy img{height:min(100%,calc(var(--gw) * .75))}

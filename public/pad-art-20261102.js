@@ -157,7 +157,7 @@ function boxDistance(px, py, half, radius) {
 export function drawPads(out, size, t) {
   const { bright, color } = padState(t);
   const unit = size / 1024;
-  const margin = 40 * unit, cell = (size - margin * 2) / GRID, half = 50 * unit, radius = 7 * unit;
+  const margin = 40 * unit, cell = (size - margin * 2) / GRID, half = 44 * unit, radius = 6 * unit;
   const glowFall = 9 * unit, rim = 5 * unit;
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
