@@ -160,14 +160,15 @@ function boxDistance(px, py, half, radius) {
 }
 
 // Draws one frame into `out` (RGBA, size×size×4). Everything scales with size, so 160, 448 and 1024 look alike.
+// Each pad is 96 of its 118 cell, a gap of about a fifth of a pad like the APC64, at every size (Astra, 2026-11-03).
 // `fill` is how much of the square the grid takes: the page shrinks it with CSS, the card and icon draw it at
 // CARD_FILL so it sits smaller in Discord's square (Astra, 2026-11-03).
 export const CARD_FILL = 0.76;
 export function drawPads(out, size, t, fill = 1) {
   const { bright, color } = padState(t);
   const unit = size / 1024 * fill;
-  const margin = (size - 944 * unit) / 2, cell = 118 * unit, half = 44 * unit, radius = 6 * unit;
-  const glowFall = 9 * unit, rim = 5 * unit;
+  const margin = (size - 944 * unit) / 2, cell = 118 * unit, half = 48 * unit, radius = 6 * unit;
+  const glowFall = 7 * unit, rim = 5 * unit;
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       let r0 = BG[0], g0 = BG[1], b0 = BG[2];
@@ -182,7 +183,7 @@ export function drawPads(out, size, t, fill = 1) {
           if (b < 0.02) continue;
           const d = boxDistance(fx - (margin + (c + 0.5) * cell), fy - (margin + (r + 0.5) * cell), half, radius);
           if (d <= 0) continue;
-          const glow = b * 0.6 * Math.exp(-d / glowFall), hue = color[r][c];
+          const glow = b * 0.42 * Math.exp(-d / glowFall), hue = color[r][c];
           r0 += hue[0] * glow; g0 += hue[1] * glow; b0 += hue[2] * glow;
         }
       }

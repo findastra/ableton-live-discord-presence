@@ -6,7 +6,7 @@ export const BUILT_IN_CLIENT_ID = '1567036812768186491';
 
 // Card art: loaded by Discord straight from the public repo, so nobody has to upload it in the Developer Portal.
 // Bump ?v= whenever the card art changes so Discord fetches the new image instead of a cached one.
-export const PAD_GRID_URL = 'https://raw.githubusercontent.com/findastra/ableton-live-discord-presence/main/public/pad-grid-card-20261102.gif?v=6';
+export const PAD_GRID_URL = 'https://raw.githubusercontent.com/findastra/ableton-live-discord-presence/main/public/pad-grid-card-20261102.gif?v=7';
 
 // Drum gear found by its Windows device name. The APC64 is Astra's pad controller.
 export const DEFAULT_DRUM_DEVICES = ['APC64'];
