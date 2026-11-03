@@ -1,6 +1,6 @@
 // What the Discord card says, and the settings that shape it.
 
-// The project's own Discord application ("Drum Session" in the Developer Portal). Application IDs are
+// The project's own Discord application. Application IDs are
 // public, so friends can use it without any setup. Registered as "Ableton Live Presence" (Astra, 2026-11-02).
 export const BUILT_IN_CLIENT_ID = '1567036812768186491';
 
