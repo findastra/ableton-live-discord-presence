@@ -17,7 +17,8 @@ First version of Ableton Live Discord Presence: a Discord card while Astra plays
 - Built version 0.1.0: detector, card, server (port 38763), launcher, Windows Startup file, page, pad-grid GIF and
   its GIF writer, 8 tests passing.
 - Created the public repo and started the app on Astra's PC (it found Live 12 Trial and the APC64). Windows startup
-  is not on yet: writing the Startup file from Claude was refused, so Astra ticks it on the app's page.
+  is not on yet: writing the Startup file from Claude was refused, so Astra double-clicks
+  `enable-automatic-startup-20261102.cmd` once.
 
 ## Open
 - Done 2026-11-02: Astra made "Ableton Live Presence" (1567036812768186491); built in as `BUILT_IN_CLIENT_ID`,
