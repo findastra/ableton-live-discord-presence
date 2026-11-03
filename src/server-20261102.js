@@ -8,7 +8,7 @@ import { DiscordRPC } from './rpc-20261102.js';
 import { startupEnabled, setStartup } from './windows-startup-20261102.js';
 import { SOURCE_IDENTITY } from './source-identity-20261102.js';
 
-export const PORT = 38763;
+export const PORT = 38765;
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const VERSION = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
 const configPath = join(root, '.local', 'config.json');

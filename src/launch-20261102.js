@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { SOURCE_IDENTITY } from './source-identity-20261102.js';
-const url = 'http://127.0.0.1:38763/';
+const url = 'http://127.0.0.1:38765/';
 const app = 'ableton-live-discord-presence';
 
 export async function launch({ fetcher = fetch, spawnProcess = spawn, identity = SOURCE_IDENTITY,

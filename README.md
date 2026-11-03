@@ -23,7 +23,7 @@ Working on Night Drive<br>
 
 1. Install [Node.js 24 or later](https://nodejs.org/en/download). No `npm install` is needed.
 2. Download this repo (Code › Download ZIP) and unzip it somewhere it can stay.
-3. Double-click `start-ableton-live-discord-presence-20261102.cmd`. Its page opens at <http://127.0.0.1:38763/>.
+3. Double-click `start-ableton-live-discord-presence-20261102.cmd`. Its page opens at <http://127.0.0.1:38765/>.
 4. To start it quietly every time Windows starts, double-click `enable-automatic-startup-20261102.cmd` once.
 
 Discord desktop must be running. In Discord, User Settings › Activity Privacy › *Share your detected activities with
@@ -44,7 +44,7 @@ Discord. Settings stay in `.local/config.json` in the app folder.
 | `src/card-20261102.js` | What the card says, and the settings |
 | `src/detector-20261102.js` | Finds Ableton's window and the drum gear |
 | `src/rpc-20261102.js` | Talks to Discord desktop over its local pipe |
-| `src/server-20261102.js` | The app: the control page at port 38763 and the card updates |
+| `src/server-20261102.js` | The app: the control page at port 38765 and the card updates |
 | `src/launch-20261102.js` | Starts the app once, or opens the page if it's already running |
 | `src/windows-startup-20261102.js` | Writes or removes `ableton-live-discord-presence-20261102.vbs` in the Startup folder |
 | `public/pad-art-20261102.js` | The one drawing behind all three pictures: the live pads on the page, the card GIF and the icon |
