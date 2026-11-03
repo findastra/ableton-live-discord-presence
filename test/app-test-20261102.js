@@ -9,7 +9,7 @@ import { readProbe, probeScript, detectAbleton } from '../src/detector-20261102.
 import { setStartup, startupEnabled, LAUNCHER_NAME } from '../src/windows-startup-20261102.js';
 import { encodeGif } from '../scripts/gif-encoder-20261102.js';
 import { makeCardGif, makeIconPng, cardFrames, CARD_SIZE } from '../scripts/make-pad-art-20261102.js';
-import { drawPads, lights, SCENES, SCENE_STEPS } from '../public/pad-art-20261102.js';
+import { drawPads, lights, SCENES, SCENE_STEPS, CARD_FILL } from '../public/pad-art-20261102.js';
 
 test('reads the set name and Live edition from the window title', () => {
   assert.deepEqual(parseTitle('Night Drive - Ableton Live 12 Trial'), { set: 'Night Drive', edition: 'Live 12 Trial' });
@@ -141,8 +141,9 @@ test('the card picture plays every design once, stays under 10 MB and matches th
 test('the app icon is the card\'s first frame, drawn at 1024, and matches the shipped file', () => {
   assert.deepEqual(readFileSync(new URL('../public/pad-grid-icon-20261102.png', import.meta.url)), makeIconPng());
   // The card's first frame is the same drawing as the icon, at the card's size.
-  assert.deepEqual(cardFrames()[0], drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, 0));
+  assert.deepEqual(cardFrames()[0], drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, 0, CARD_FILL));
   // Drum hits flash to full brightness on their step.
-  assert.equal(lights(0)[7][0], 1);
-  assert.ok(lights(0.5)[7][0] < 1);
+  assert.equal(SCENES[0].name, 'rainbow swirl');
+  assert.equal(lights(SCENE_STEPS)[7][0], 1);
+  assert.ok(lights(SCENE_STEPS + 0.5)[7][0] < 1);
 });

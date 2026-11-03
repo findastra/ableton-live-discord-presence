@@ -62,6 +62,11 @@ const HEART = ['01100110', '11111111', '11111111', '11111111', '01111110', '0011
 
 // Each design: its palette and how bright pad (r, c) is at step s (0 to SCENE_STEPS) of its two bars.
 export const SCENES = [
+  // First, so the card's first frame and the app icon are the rainbow swirl (Astra, 2026-11-03).
+  { name: 'rainbow swirl', palette: 'rainbow', light(r, c, s) {
+    const angle = Math.atan2(r - 3.5, c - 3.5), d = Math.hypot(r - 3.5, c - 3.5);
+    return 0.08 + 0.92 * (0.5 + 0.5 * Math.cos(2 * angle - d * 1.5 - s * 0.35)) ** 3;
+  } },
   { name: 'drums', palette: 'synthwave', light(r, c, s) {
     const phase = (r + c) / 2 - s * 0.5;
     let b = 0.55 * Math.abs(Math.cos(phase * Math.PI / 6)) ** 1.2;
@@ -86,11 +91,6 @@ export const SCENES = [
     const head = (s * 0.75 + rand(c + 5) * 11) % 11 - 1.5;
     const behind = head - r;
     return behind >= 0 && behind < 3.5 ? (1 - behind / 3.5) ** 1.5 : 0.05;
-  } },
-  { name: 'spiral', palette: 'ultraviolet', light(r, c, s) {
-    const angle = Math.atan2(r - 3.5, c - 3.5), d = Math.hypot(r - 3.5, c - 3.5);
-    const lag = ((s * Math.PI / 6 - angle - d * 0.45) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-    return 0.06 + 0.94 * Math.max(0, 1 - lag / 2.4) ** 1.6;
   } },
   { name: 'checker', palette: 'candy', light(r, c, s) {
     const beat = Math.floor(s / 4);
@@ -121,6 +121,13 @@ function paletteAt(name, x) {
   const p = PALETTES[name];
   return x < 0.5 ? mix(p[0], p[1], x * 2) : mix(p[1], p[2], x * 2 - 1);
 }
+// The rainbow swirl's colours go round the centre and slowly turn.
+function rainbowAt(r, c, s) {
+  const hue = ((Math.atan2(r - 3.5, c - 3.5) / (2 * Math.PI) + 0.5 + Math.hypot(r - 3.5, c - 3.5) * 0.06 - s * 0.012) % 1 + 1) % 1;
+  const k = n => { const v = (n + hue * 6) % 6; return 255 * (1 - 0.72 * Math.max(0, Math.min(v, 4 - v, 1))); };
+  return [k(5), k(3), k(1)];
+}
+const colorAt = (scene, r, c, s) => scene.palette === 'rainbow' ? rainbowAt(r, c, s) : paletteAt(scene.palette, (r + c) / (2 * GRID - 2));
 
 // Brightness and colour of every pad at time t (in sixteenths, any real number). The last four steps of each design
 // fade into the next.
@@ -133,11 +140,10 @@ export function padState(t) {
   for (let r = 0; r < GRID; r++) {
     bright.push([]); color.push([]);
     for (let c = 0; c < GRID; c++) {
-      const x = (r + c) / (2 * GRID - 2);
-      let b = scene.light(r, c, s), col = paletteAt(scene.palette, x);
+      let b = scene.light(r, c, s), col = colorAt(scene, r, c, s);
       if (w > 0) {
         b = b * (1 - w) + next.light(r, c, s - SCENE_STEPS) * w;
-        col = mix(col, paletteAt(next.palette, x), w);
+        col = mix(col, colorAt(next, r, c, s - SCENE_STEPS), w);
       }
       bright[r].push(Math.max(0, Math.min(1, b)));
       color[r].push(col);
@@ -154,10 +160,13 @@ function boxDistance(px, py, half, radius) {
 }
 
 // Draws one frame into `out` (RGBA, size×size×4). Everything scales with size, so 160, 448 and 1024 look alike.
-export function drawPads(out, size, t) {
+// `fill` is how much of the square the grid takes: the page shrinks it with CSS, the card and icon draw it at
+// CARD_FILL so it sits smaller in Discord's square (Astra, 2026-11-03).
+export const CARD_FILL = 0.76;
+export function drawPads(out, size, t, fill = 1) {
   const { bright, color } = padState(t);
-  const unit = size / 1024;
-  const margin = 40 * unit, cell = (size - margin * 2) / GRID, half = 44 * unit, radius = 6 * unit;
+  const unit = size / 1024 * fill;
+  const margin = (size - 944 * unit) / 2, cell = 118 * unit, half = 44 * unit, radius = 6 * unit;
   const glowFall = 9 * unit, rim = 5 * unit;
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {

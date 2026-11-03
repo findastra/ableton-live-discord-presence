@@ -5,13 +5,13 @@
 import { writeFileSync, realpathSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { drawPads, LOOP_STEPS } from '../public/pad-art-20261102.js';
+import { drawPads, LOOP_STEPS, CARD_FILL } from '../public/pad-art-20261102.js';
 import { encodeGif } from './gif-encoder-20261102.js';
 
 export const CARD_SIZE = 160, ICON_SIZE = 1024, SUBSTEPS = 2, DELAY = 6; // 2 frames per step, 60 ms each = 125 BPM
 
 export function cardFrames() {
-  return Array.from({ length: LOOP_STEPS * SUBSTEPS }, (_, i) => drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, i / SUBSTEPS));
+  return Array.from({ length: LOOP_STEPS * SUBSTEPS }, (_, i) => drawPads(new Uint8ClampedArray(CARD_SIZE * CARD_SIZE * 4), CARD_SIZE, i / SUBSTEPS, CARD_FILL));
 }
 
 // Median cut: split the colours the frames use into 256 boxes, each box's average is one palette colour.
@@ -82,7 +82,7 @@ function chunk(type, data) {
   return Buffer.concat([len, body, crc]);
 }
 export function makeIconPng() {
-  const rgba = drawPads(new Uint8ClampedArray(ICON_SIZE * ICON_SIZE * 4), ICON_SIZE, 0);
+  const rgba = drawPads(new Uint8ClampedArray(ICON_SIZE * ICON_SIZE * 4), ICON_SIZE, 0, CARD_FILL);
   const rows = Buffer.alloc((ICON_SIZE * 3 + 1) * ICON_SIZE);
   for (let y = 0; y < ICON_SIZE; y++) for (let x = 0; x < ICON_SIZE; x++) {
     const o = y * (ICON_SIZE * 3 + 1) + 1 + x * 3, i = (y * ICON_SIZE + x) * 4;
