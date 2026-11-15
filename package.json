@@ -5,6 +5,6 @@
   "description": "Shows on your Discord profile when you're playing drums or making music in Ableton Live.",
   "type": "module",
   "engines": { "node": ">=24.0.0" },
-  "scripts": { "start": "node src/server-20261102.js", "test": "node --test", "art": "node scripts/make-pad-art-20261102.js" },
+  "scripts": { "start": "node src/server-20261102.js", "test": "node --test", "art": "node scripts/make-pad-art-20261102.js", "package": "node scripts/package-20261115.mjs" },
   "license": "MIT"
 }
