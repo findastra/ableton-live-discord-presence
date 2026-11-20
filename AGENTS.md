@@ -18,8 +18,12 @@ The AI presence apps live in `findastra/ai-discord-presence`; this app follows t
   ask first.
 - Add tests with every behaviour change (`node --test`). Never commit `.local/`, credentials, caches or logs.
 - New filenames use lowercase words and a date immediately before the extension. Required names (`README.md`,
-  `AGENTS.md`, `CLAUDE.md`, `LICENSE`, `package.json`, `.gitignore`, `.gitattributes`) keep their exact names.
+  `AGENTS.md`, `CLAUDE.md`, `LICENSE`, `SECURITY.md`, `package.json`, `.gitignore`, `.gitattributes`) and the start
+  files (`Start Ableton Live Discord Presence.cmd`, `Enable Automatic Startup.cmd`, as in AI Discord Presence) keep
+  their exact names.
 
 Built with:
 - Version 0.1.0 (the app, its page, the pad-grid art and its GIF writer): Claude Opus 5.5 (`claude-opus-5-5`),
   2026-11-02, at Astra's request. Choices recorded in [handoffs/001](handoffs/001-any-first-version-20261102.md).
+- Laid out like AI Discord Presence (start files, download, README, SECURITY.md, `changes/`): Claude Opus 5.5
+  (`claude-opus-5-5`), 2026-11-15, at Astra's request ([changes](changes/ai-layout-20261115.md)).
