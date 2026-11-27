@@ -14,8 +14,8 @@ export function probeScript(devices) {
     ? `@(Get-CimInstance Win32_PnPEntity -Filter "(${filters.join(' OR ')}) AND Status='OK'").Count`
     : '0';
   return [
-    "$p = Get-Process | Where-Object { $_.ProcessName -like 'Ableton Live*' -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1",
-    `$d = ${drums}`,
+    "$p = Get-Process -Name 'Ableton Live*' -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1",
+    `$d = if ($p) { ${drums} } else { 0 }`,
     '[pscustomobject]@{ title = [string]$p.MainWindowTitle; drums = $d } | ConvertTo-Json -Compress',
   ].join('; ');
 }
@@ -23,7 +23,7 @@ export function probeScript(devices) {
 function run(script) {
   return new Promise((resolve, reject) => {
     execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script],
-      { windowsHide: true, timeout: 8000, maxBuffer: 64 * 1024 },
+      { windowsHide: true, timeout: 15000, maxBuffer: 64 * 1024 },
       (error, stdout) => error ? reject(error) : resolve(stdout));
   });
 }

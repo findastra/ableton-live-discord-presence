@@ -7,6 +7,7 @@ const app = 'ableton-live-discord-presence';
 
 export async function launch({ fetcher = fetch, spawnProcess = spawn, identity = SOURCE_IDENTITY,
   background = process.argv.includes('--background'), replace = process.argv.includes('--replace'),
+  automatic = process.argv.includes('--automatic'),
   sleep = ms => new Promise(r => setTimeout(r, ms)) } = {}) {
   async function status() {
     let response;
@@ -42,6 +43,11 @@ export async function launch({ fetcher = fetch, spawnProcess = spawn, identity =
     }
   }
   if (!(await status())) throw new Error('Could not start Ableton Live Discord Presence. Run node src/server-20261102.js for details.');
+  if (automatic) {
+    const response = await fetcher(url + 'api/mode', { method: 'POST', signal: AbortSignal.timeout(2000),
+      headers: { 'Content-Type': 'application/json', Origin: url.slice(0, -1) }, body: JSON.stringify({ mode: 'auto' }) });
+    if (response.ok === false) throw new Error('The app started but could not enable Automatic. Open its controls.');
+  }
   if (!background) spawnProcess('rundll32.exe', ['url.dll,FileProtocolHandler', url], { detached: true, windowsHide: true, stdio: 'ignore' }).unref();
 }
 function isMainModule() {
