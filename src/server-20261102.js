@@ -1,3 +1,4 @@
+import { SavedMode, DisplayLease, startCoordinator } from './presence-runtime-20261127.js';
 import http from 'node:http';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +19,9 @@ const origin = `http://127.0.0.1:${port}`;
 let config = validateConfig();
 try { config = validateConfig(JSON.parse(readFileSync(configPath, 'utf8'))); } catch { /* Setup stays available. */ }
 const presence = new Presence();
-presence.setMode(config.automaticOnStart ? 'auto' : 'off');
+const savedMode = new SavedMode(join(root, '.local'));
+const displayLease = new DisplayLease();
+presence.setMode(savedMode.read(config.automaticOnStart ? 'auto' : 'off'));
 const rpc = new DiscordRPC();
 let detection = { active: false, drums: false, set: '', edition: '', message: 'Waiting for Ableton Live to open.' };
 let message = config.clientId ? 'Ready.' : 'One-time setup: add your Discord Application ID.';
@@ -33,6 +36,7 @@ let closing = false;
 const TICK_MS = 1000;
 const DETECT_MS = 5000;
 let detectedAt = 0;
+let detecting = false;
 // After a failed connection (Discord closed), wait before trying the pipes again.
 let retryAt = 0;
 // Discord takes about five activity updates per 20 seconds from one app.
@@ -46,9 +50,15 @@ async function sync() {
   running = true;
   const current = revision;
   try {
-    if (presence.mode !== 'off' && Date.now() - detectedAt >= DETECT_MS) {
-      detection = await detectAbleton({ devices: config.drumDevices });
+    if (presence.mode !== 'off' && !detecting && Date.now() - detectedAt >= DETECT_MS) {
       detectedAt = Date.now();
+      detecting = true;
+      // Windows device enumeration must not block Stop or a display-turn withdrawal.
+      void detectAbleton({ devices: config.drumDevices }).then(result => {
+        detection = result;
+        revision++;
+        void sync();
+      }).finally(() => { detecting = false; });
     }
     presence.update(detection.active);
     if (!config.clientId) { message = 'Add your Discord Application ID to connect.'; return; }
@@ -58,6 +68,12 @@ async function sync() {
       lastSent = null;
       rpc.disconnect();
       message = presence.mode === 'off' ? 'Sharing is off.' : detection.message;
+      return;
+    }
+    if (!displayLease.allows()) {
+      if (rpc.ready && lastSent !== null) await rpc.setActivity(null);
+      published = false; lastSent = null; rpc.disconnect();
+      message = 'Sharing is enabled; another enabled app is taking its turn.';
       return;
     }
     if (Date.now() < retryAt) return;
@@ -71,7 +87,7 @@ async function sync() {
       await rpc.setActivity(payload);
       lastSent = signature;
     }
-    published = true;
+    published = lastSent != null;
     message = 'Activity accepted by Discord. Your Discord settings control who sees it.';
   } catch (error) {
     published = false;
@@ -120,7 +136,7 @@ const server = http.createServer(async (req, res) => {
   if (req.headers.host !== `127.0.0.1:${port}`) return send(res, 403, { error: 'Local requests only.' });
   try {
     if (req.method === 'GET' && req.url === '/api/status') {
-      return send(res, 200, { app: 'ableton-live-discord-presence', version: VERSION, identity: SOURCE_IDENTITY, config, mode: presence.mode,
+      return send(res, 200, { app: 'ableton-live-discord-presence', version: VERSION, identity: SOURCE_IDENTITY, coordinationVersion: 1, eligible: !!config.clientId && presence.startedAt !== null, coordinated: displayLease.until > Date.now(), config, mode: presence.mode,
         startedAt: presence.startedAt, published, connected: rpc.ready, message, startupEnabled: startupEnabled(),
         detection, card: activity(presence.startedAt ?? Math.floor(Date.now() / 1000), detection, config) });
     }
@@ -144,7 +160,21 @@ const server = http.createServer(async (req, res) => {
         void sync();
         return send(res, 200, { ok: true });
       }
+      if (req.url === '/api/display') {
+        displayLease.update(input);
+        revision++; retryAt = 0;
+        await sync();
+        // A withdrawal acknowledgement must wait for an in-flight RPC update too.
+        const deadline = Date.now() + 2500;
+        while (running || rerun) {
+          if (Date.now() >= deadline) throw new Error('Display update is still pending.');
+          await new Promise(done => setTimeout(done, 25));
+        }
+        if (!input.selected && (published || rpc.ready)) throw new Error('Card withdrawal is still pending.');
+        return send(res, 200, { ok: true });
+      }
       if (req.url === '/api/mode') {
+        savedMode.save(input.mode);
         presence.setMode(input.mode);
         revision++;
         detectedAt = 0;
@@ -188,6 +218,7 @@ async function shutdown() {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 server.listen(port, '127.0.0.1', () => {
+  startCoordinator(join(root, '..', 'discord-tower', 'tools', 'presence-control', 'presence-control-20261030.mjs'));
   console.log(`Ableton Live Discord Presence: ${origin}\nClose with Quit app or Ctrl+C.`);
   void sync();
 });
