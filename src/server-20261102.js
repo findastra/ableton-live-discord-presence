@@ -60,7 +60,7 @@ async function sync() {
         void sync();
       }).finally(() => { detecting = false; });
     }
-    presence.update(detection.active);
+    presence.update(detection.active || displayLease.keepsEnabled(presence.mode));
     if (!config.clientId) { message = 'Add your Discord Application ID to connect.'; return; }
     if (presence.startedAt === null) {
       if (rpc.ready && lastSent !== null) await rpc.setActivity(null);
@@ -81,6 +81,9 @@ async function sync() {
     retryAt = 0;
     if (current !== revision || closing) { rerun = true; return; }
     const payload = activity(presence.startedAt, detection, config);
+    if (!detection.active && displayLease.keepsEnabled(presence.mode)) {
+      payload.details = 'Idle'; payload.state = 'Automatic sharing enabled';
+    }
     const signature = JSON.stringify(payload);
     if (lastSent !== signature && Date.now() - sentAt >= MIN_SEND_MS) {
       sentAt = Date.now();
@@ -136,7 +139,7 @@ const server = http.createServer(async (req, res) => {
   if (req.headers.host !== `127.0.0.1:${port}`) return send(res, 403, { error: 'Local requests only.' });
   try {
     if (req.method === 'GET' && req.url === '/api/status') {
-      return send(res, 200, { app: 'ableton-live-discord-presence', version: VERSION, identity: SOURCE_IDENTITY, coordinationVersion: 1, eligible: !!config.clientId && presence.startedAt !== null, coordinated: displayLease.until > Date.now(), config, mode: presence.mode,
+      return send(res, 200, { app: 'ableton-live-discord-presence', version: VERSION, identity: SOURCE_IDENTITY, coordinationVersion: 1, eligible: !!config.clientId && presence.mode !== 'off', coordinated: displayLease.until > Date.now(), config, mode: presence.mode,
         startedAt: presence.startedAt, published, connected: rpc.ready, message, startupEnabled: startupEnabled(),
         detection, card: activity(presence.startedAt ?? Math.floor(Date.now() / 1000), detection, config) });
     }

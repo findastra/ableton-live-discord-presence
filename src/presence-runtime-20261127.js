@@ -21,12 +21,14 @@ export class SavedMode {
 }
 export class DisplayLease {
   selected = true;
+  includeIdle = false;
   until = 0;
   update(value, now = Date.now()) {
     if (typeof value.selected !== 'boolean' || !Number.isSafeInteger(value.until)
       || value.until <= now || value.until > now + 15000) throw new Error('Invalid display lease.');
-    this.selected = value.selected; this.until = value.until;
+    this.selected = value.selected; this.until = value.until; this.includeIdle = value.includeIdle === true;
   }
+  keepsEnabled(mode, now = Date.now()) { return mode !== 'off' && this.includeIdle && now < this.until; }
   allows(now = Date.now()) { return now >= this.until || this.selected; }
 }
 

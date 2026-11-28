@@ -37,3 +37,14 @@ test('countdown mode validation cannot persist an unsupported mode', t => {
   writeFileSync(store.path, JSON.stringify({ mode: 'auto' }));
   assert.equal(store.read(), 'off');
 });
+
+test('idle rotation includes enabled modes, never Off, and expires safely', () => {
+  const lease = new DisplayLease();
+  lease.update({ selected: true, includeIdle: true, until: 9000 }, 1000);
+  assert.equal(lease.keepsEnabled('auto', 5000), true);
+  assert.equal(lease.keepsEnabled('manual', 5000), true);
+  assert.equal(lease.keepsEnabled('off', 5000), false);
+  assert.equal(lease.keepsEnabled('auto', 9000), false);
+  lease.update({ selected: true, includeIdle: false, until: 10000 }, 5000);
+  assert.equal(lease.keepsEnabled('auto', 6000), false);
+});
